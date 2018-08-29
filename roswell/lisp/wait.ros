@@ -1,0 +1,17 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|Wait forever
+exec ros -Q -- $0 "$@"
+|#
+
+(progn
+  )
+
+(defpackage :ros.script.wait.3672012352
+  (:use :cl))
+(in-package :ros.script.wait.3672012352)
+
+(defun main (&rest argv)
+  (declare (ignore argv))
+  (loop (sleep 1)))
+;;; vim: set ft=lisp lisp:

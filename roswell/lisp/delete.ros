@@ -1,0 +1,21 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|Delete installed implementations
+exec ros -Q -m roswell -N roswell -- $0 "$@"
+|#
+
+(progn
+  (roswell:include '("util-main" "delete-default")))
+
+(defpackage :ros.script.delete.3672011943
+  (:use :cl :roswell.util.main))
+(in-package :ros.script.delete.3672011943)
+
+(defun main (&rest argv)
+  (module-main argv
+               :default "default"
+               :usage "default"
+               :mod-name (lambda (x) (if (position #\/ x)
+                                         (subseq x 0 (position #\/ x))
+                                         x))))
+;;; vim: set ft=lisp lisp:

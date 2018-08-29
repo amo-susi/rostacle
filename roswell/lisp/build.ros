@@ -1,0 +1,37 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|Make executable from script.
+exec ros +Q -m roswell -N roswell -- $0 "$@"
+|#
+
+(progn
+  (ros:include "util")
+  (unless (find-package :uiop)
+    (ql:quickload "uiop" :silent t)))
+
+(defpackage :ros.script.build.3672011906
+  (:use :cl :roswell.util))
+(in-package :ros.script.build.3672011906)
+
+(defun help ()
+  (format *error-output* "~&Usage: ~A build [<file>] [[options]]~%"
+          (roswell:opt "argv0")))
+
+(defun main (&rest argv)
+  (let ((file (first argv)))
+    (unless (and file (pathname-type file))
+      (push (probe-file
+             (make-pathname :name (first (last (pathname-directory *default-pathname-defaults*)))
+                            :type "asd"))
+            argv)
+      (setf file (first argv)))
+    (unless file
+      (help)
+      (roswell:quit))
+    (unless (probe-file file)
+      (error "File does not exist: '~A'" file))
+    (let ((func (module "build" (pathname-type file))))
+      (if func
+          (apply func argv)
+          (error "'~A' is not acceptable for build." file)))))
+;;; vim: set ft=lisp lisp:

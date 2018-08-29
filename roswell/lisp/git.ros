@@ -1,0 +1,39 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|git wrapper
+exec ros -Q -m roswell -N roswell -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  (roswell:include "util"))
+
+(defpackage :ros.script.git.3702458293
+  (:use :cl :roswell.util))
+(in-package :ros.script.git.3702458293)
+
+(defun location (key)
+  (let ((found (or (cdr (assoc key `(("sbcl" . ,(merge-pathnames "src/sbcl-git/" (homedir)))
+                                     ("sly" . ,(merge-pathnames "lisp/sly/git/" (homedir))))
+                               :test 'equal))
+                   (ql:where-is-system key))))
+    (when found
+      (make-pathname
+       :type nil :name nil
+       :defaults found))))
+
+(defun main (&rest argv)
+  (let* ((name (pathname-name *load-pathname*)))
+    (roswell:exec
+     (cond
+       ((equal (first argv) "clone")
+        (uiop:chdir (first ql:*local-project-directories*))
+        `(,name ,@argv))
+       ((location (first argv))
+        (let* ((path (location (first argv))))
+          (if (ignore-errors (uiop:chdir path))
+              `(,name ,@(rest argv))
+              (progn
+                (format t "~A not found.~%" (first argv))
+                (roswell:quit 1)))))
+       (t `(,(roswell:opt "wargv0") "help" ,name))))))
+;;; vim: set ft=lisp lisp:

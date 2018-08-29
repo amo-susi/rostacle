@@ -1,0 +1,48 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|Get and set options
+exec ros +R +Q +A -m roswell -N roswell -- $0 "$@"
+|#
+
+(progn
+  (roswell:include "util-config"))
+
+(defpackage :ros.script.config.3668210854
+  (:use :cl :roswell.util.config))
+(in-package :ros.script.config.3668210854)
+
+(defun main (&rest argv)
+  (let* ((path (cond ((equal (first argv) "--env")
+                      (prog1
+                          (merge-pathnames (format nil "env/~A/config"
+                                                   (or (roswell:opt "*roswellenv")
+                                                       (third (assoc "roswellenv"
+                                                                     (load-config ".roswellenv")
+                                                                     :test 'equal))))
+                                           (roswell:opt "homedir"))
+                        (setf argv (cdr argv))))
+                     ((equal (first argv) "--local")
+                      (setf argv (cdr argv))
+                      ".roswellenv")
+                     ((equal (first argv) "--user")
+                      (setf argv (cdr argv))
+                      (merge-pathnames "config" (roswell:version "confdir")))
+                     (t
+                      (merge-pathnames "config" (roswell:version "confdir")))))
+         (conf (load-config path))
+         (len (length argv)))
+    (cond
+      ((= 0 len)
+       (loop for i in conf
+             do (format *error-output* "~A=~A~%" (first i) (third i))
+             finally (format *error-output* "~%Possible subcommands:~%set~%show~%")) 0)
+      ((and (equal (first argv) "unset") (= 2 len))
+       (setf conf (unconfig conf (second argv)))
+       (save-config path conf) 0)
+      ((and (equal (first argv) "set") (= 3 len))
+       (setf conf (config conf (second argv) (third argv)))
+       (save-config path conf) 0)
+      ((and (equal (first argv) "show") (= 2 len))
+       (format t "~A~%" (or (third (find (second argv) conf :test 'equal :key #'first)) "")) 0)
+      (t 1))))
+;;; vim: set ft=lisp lisp:

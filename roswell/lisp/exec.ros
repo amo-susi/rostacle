@@ -1,0 +1,28 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|Set PATH for env then execute.
+exec ros -m roswell -N roswell -- $0 "$@"
+|#
+(progn ;;init forms
+  (roswell:include "util-config"))
+
+(defpackage :ros.script.exec.3714434941
+  (:use :cl :roswell.util))
+(in-package :ros.script.exec.3714434941)
+
+(defun main (&rest argv)
+  (let* ((env (third (assoc "roswellenv" (roswell.util.config:load-config ".roswellenv") :test 'equal)))
+         (path (merge-pathnames
+                (format nil (if (and env
+                                     (not (equal env "roswell")))
+                                "env/~A/bin/"
+                                "bin/")
+                        env)
+                (homedir))))
+    (setenv "PATH" (format nil
+                           #-win32 "~A:~A"
+                           #+win32 "~A;~A"
+                           (namestring path)
+                           (roswell:getenv "PATH")))
+    (roswell:exec argv)))
+;;; vim: set ft=lisp lisp:

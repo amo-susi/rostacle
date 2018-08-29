@@ -1,0 +1,70 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|Indent lisp source.
+exec ros -Q -N roswell -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  #+quicklisp
+  (progn
+    (unless (ql:where-is-system :lem)
+      (roswell:roswell '("git" "clone" "https://github.com/cxxxr/lem.git"))
+      (quicklisp-client:register-local-projects))
+    (ql:quickload '("swank" "lem-base" "lem-lisp-syntax") :silent t)))
+
+(defpackage :ros.script.fmt.3707812168
+  (:use :cl))
+(in-package :ros.script.fmt.3707812168)
+
+(defun system (path)
+  (let ((* (when (and (probe-file path)
+                      (equal (pathname-type path) "asd"))
+             (asdf:load-asd path)
+             (pathname-name path))))
+    (labels ((r (c)
+               (typecase c
+                 (asdf:system
+                  (append
+                   (directory (merge-pathnames "roswell/*.ros" (asdf:component-pathname c)))
+                   (loop for child in (asdf:component-children c)
+                         append (r child))))
+                 (asdf:module
+                  (loop for child in (asdf:component-children c)
+                        append (r child)))
+                 (asdf:cl-source-file
+                  (list (asdf:component-pathname c)))
+                 (t
+                  (list c)))))
+      (when *
+        (ql:quickload * :silent (not (ros:verbose)))
+        (lem-lisp-syntax.indent:indentation-update)
+        (r (asdf:find-system *))))))
+
+(defun main (&rest argv)
+  "go fmt like something"
+  (dolist (arg (if argv
+                   (prog1 (loop for arg in argv
+                                append (or (system arg) (list arg)))
+                     (lem-lisp-syntax:indentation-update))
+                   (ignore-errors
+                    (let* ((name (first (last (pathname-directory *default-pathname-defaults*))))
+                           (path (probe-file (make-pathname :name name :type "asd"))))
+                      (or (and path (system path))
+                          (append (directory "*.lisp")
+                                  (directory "*.ros")))))))
+    (if (probe-file arg)
+        (let ((buffer (lem-base:find-file-buffer arg)))
+          (setf (lem-base:buffer-syntax-table buffer)
+                lem-lisp-syntax:*syntax-table*)
+          (setf (lem-base:variable-value 'lem-base:calc-indent-function :buffer buffer)
+                'lem-lisp-syntax:calc-indent)
+          (lem-base:indent-region (lem-base:buffer-start-point buffer)
+                                  (lem-base:buffer-end-point buffer))
+          (loop with regexp = "[ 	]+$" ;; remove trailing spaces.
+                for start = (lem-base:search-forward-regexp (lem-base:copy-point (lem-base:buffer-start-point buffer)) regexp)
+                while start
+                for end = (lem-base:search-backward-regexp (lem-base:copy-point start) regexp)
+                do (lem-base:delete-between-points start end))
+          (lem-base:write-to-file buffer (lem-base:buffer-filename buffer)))
+        (format *error-output* "~A does not exist" arg))))
+;;; vim: set ft=lisp lisp:

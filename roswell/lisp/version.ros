@@ -1,0 +1,38 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|Show the roswell version information
+exec ros -Q -m roswell -N roswell -- $0 "$@"
+|#
+
+(progn
+  (roswell:include "util")
+  (roswell:quicklisp :environment nil))
+
+(defpackage :ros.script.version.3668210994
+  (:use :cl :ros))
+(in-package :ros.script.version.3668210994)
+
+(defun main (&rest argv)
+  (declare (ignore argv))
+  (let ((revision (version "revision"))
+        (curl (version "curl"))
+        (asdf (version "asdf"))
+        (conf (version "confdir"))
+        (home (roswell.util:homedir)))
+    (unless (zerop (length revision))
+      (setf revision (format nil "(~A)" revision)))
+    (format *error-output* "~A~A~%build with ~A~%"
+            (version "package") revision
+            (version "cc"))
+    (unless (zerop (length curl))
+      (format *error-output* "libcurl=~A~%" curl))
+    (unless (zerop (length asdf))
+      (format *error-output* "ASDF=~A~%" asdf))
+    (format *error-output* "Quicklisp=~A~%Dist=~A~%"
+            (ql:client-version)
+            (ql-dist:version (ql-dist:find-dist "quicklisp")))
+    (format *error-output* "lispdir='~A'~%" (opt "lispdir"))
+    (format *error-output* "homedir='~A'~%" home)
+    (unless (or (zerop (length conf)) (equal home conf))
+      (format *error-output* "configdir='~A'~%" conf))))
+;;; vim: set ft=lisp lisp:

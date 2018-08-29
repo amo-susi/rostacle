@@ -1,0 +1,63 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|Show Command help
+exec ros -Q -m roswell -N roswell -- $0 "$@"
+|#
+
+(progn
+  (roswell:include "util"))
+
+(defpackage :ros.script.help.3668211011
+  (:use :cl :roswell.util))
+(in-package :ros.script.help.3668211011)
+
+(defparameter *important-commands* '("run" "install" "update" "build" "use" "init" "fmt" "list" "template" "delete" "config" "version"))
+
+(defun command (stream path max)
+  (format stream "   ~vA~A~%" (+ 2 max) (pathname-name path)
+          (ignore-errors
+           (with-open-file (in path)
+             (loop repeat 2 do (read-line in))
+             (subseq (read-line in) 2)))))
+
+(defun commands (stream)
+  (let* ((lispdir (opt "lispdir"))
+         (list (nconc (when (roswell:verbose) (directory (merge-pathnames "*.ros" lispdir)))
+                      (directory (merge-pathnames "cmds/*.ros" (homedir)))))
+         (max (max 8 (loop for i in list maximize (length (pathname-name i))))))
+    (dolist (i *important-commands*)
+      (setf list (delete i list :key #'pathname-name :test #'equal)))
+    (setf list (nconc (mapcar #'(lambda (x) (make-pathname :type "ros" :name x :defaults lispdir)) *important-commands*)
+                      list))
+    (format stream "commands:~%")
+    (dolist (i list)
+      (command stream i max))
+    (format stream "~%")))
+
+(defun options (stream)
+  (format stream "~{   ~A~%~}~%"
+          (sort (loop for x in (directory (merge-pathnames "help-*.lisp" (opt "lispdir")))
+                      for name = (subseq (pathname-name x) 5)
+                      unless (find name *important-commands* :test 'equal)
+                      collect name)
+                #'string<)))
+
+(defun main (&rest argv)
+  (let ((s *error-output*)
+        (cmd (pathname-name (opt "wargv0"))))
+    (cond
+      ((not (first argv)) ;; without any options
+       (format s "Common Lisp environment setup Utility.~%~%")
+       (format s "Usage:~%~%   ~A [options] Command [arguments...]~%or~%" cmd)
+       (format s "   ~A [options] [[--] script-path arguments...]~%~%" cmd)
+       (commands s)
+       (format s "Use \"ros help [command]\" for more information about a command.~%~%")
+       (format s "Additional help topics:~%~%") ;; tbd
+       (options s)
+       (format s "Use \"ros help [topic]\" for more information about the topic.~%~%"))
+      ((let ((func (module "help" (first argv))))
+         (when func
+           (funcall func argv))
+         func))
+      (t (roswell:exec `(,(opt "argv0") "roswell-internal-use" "man" ,(format nil "ros-~A" (first argv))))))))
+;;; vim: set ft=lisp lisp:

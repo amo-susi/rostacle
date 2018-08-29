@@ -1,0 +1,20 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|Install a given implementation or a system for roswell environment
+exec ros -Q +R -L sbcl-bin -- $0 "$@"
+|#
+
+(progn
+  (roswell:ensure-asdf)
+  (roswell:include "util-install")
+  (when (probe-file (merge-pathnames "setup.lisp" (roswell:opt "quicklisp")))
+    (roswell:include "util-install-quicklisp")))
+
+(defpackage :ros.script.install.3671936092
+  (:use :cl :roswell.install :roswell.util))
+(in-package :ros.script.install.3671936092)
+
+(defun main (&rest argv)
+  (install argv))
+
+;;; vim: set ft=lisp lisp:

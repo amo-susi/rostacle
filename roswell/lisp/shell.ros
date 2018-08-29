@@ -1,0 +1,32 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#| Launch msys2 for windows
+exec ros -Q -m roswell -N roswell -- $0 "$@"
+|#
+(progn ;;init forms
+  (roswell:ensure-asdf)
+  (roswell:include "util-install-quicklisp")
+  )
+
+(defpackage :ros.script.shell.3693403229
+  (:use :cl :roswell.util))
+(in-package :ros.script.shell.3693403229)
+
+(defun msys ()
+  (merge-pathnames
+   (format nil "impls/~A/~A/msys2/~A/msys2_shell.cmd"
+           (uname-m) (uname) (config "msys2.version"))
+   (homedir)))
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  #+win32
+  (progn
+    (config-env)
+    (unless (probe-file (msys))
+      (roswell:roswell '("install msys2+")))
+    (uiop/run-program:run-program
+     `(,(sb-ext:native-namestring (msys)) ,@argv)))
+  #-win32
+  (format *error-output* "'ros shell' is for windows~%"))
+;;; vim: set ft=lisp lisp:

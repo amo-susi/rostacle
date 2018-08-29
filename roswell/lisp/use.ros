@@ -1,0 +1,25 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|Change default implementation.
+exec ros +R -Q -m roswell -N roswell -- $0 "$@"
+|#
+
+(progn
+  (roswell:ensure-asdf)
+  (roswell:include '("util-use" "list-installed")))
+
+(defpackage :ros.script.use.3672012320
+  (:use :cl :roswell.util))
+(in-package :ros.script.use.3672012320)
+
+(defun main (&rest argv)
+  (cond
+    ((null argv)
+     (format *error-output* "Possible target candidates:~%")
+     (finish-output *error-output*)
+     (let ((*error-output* (make-broadcast-stream)))
+       (roswell.list.installed:installed)))
+    ((not (apply 'roswell.util.use:use argv))
+     (format *error-output* "Error: unable to use '~A'~%" (first argv))
+     (roswell:quit 1))))
+;;; vim: set ft=lisp lisp:
