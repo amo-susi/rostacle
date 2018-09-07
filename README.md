@@ -40,7 +40,7 @@ Const vbMinimizedNoFocus = 6 '最小化、ただし、最前面にはならな�
  
 Dim objWShell
 Set objWShell = CreateObject("WScript.Shell")
-objWShell.Run "cmd /c start.bat", vbMinimizedNoFocus, False
+objWShell.Run "cmd /c bar.bat", vbMinimizedNoFocus, False
  
 Set objWShell = Nothing
 ```
