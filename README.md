@@ -3,12 +3,11 @@
 ## Usage
 roswell + portacle.
 
-1, 適当な場所に置く。
-2, `ros-build.bat`をクリック。
-3, `ros-install.bat xxx`で使いたいライブラリをインストールもしくは、
-   `roswell/.roswell/lisp/quicklisp/local-projects以下に配置。
-4, rosファイルを作成。
-5, rosファイルを起動させるbatを作成。
+#### 1, 適当な場所に置く。
+#### 2, `ros-build.bat`をクリック。
+#### 3, `ros-install.bat xxx`で使いたいライブラリをインストールもしくは、`roswell/.roswell/lisp/quicklisp/local-projects以下に配置。
+#### 4, rosファイルを作成。
+#### 5, rosファイルを起動させるbatを作成。
 
 rosファイル名がfoo.rosだった場合のbatファイルの中身
 ```
@@ -25,8 +24,8 @@ set ROSWELL_HOME=%~dp0\roswell\.roswell
 %~dp0\roswell\ros.exe foo.ros
 ```
 
-6, 作成したbatファイルを起動し、必要なライブラリをダウンロードさせる。
-7, 必要に応じてコマンドプロンプト(DOS窓)を起動時に表示させない様なvbスクリプトを作成。
+#### 6, 作成したbatファイルを起動し、必要なライブラリをダウンロードさせる。
+#### 7, 必要に応じてコマンドプロンプト(DOS窓)を起動時に表示させない様なvbスクリプトを作成。
 
 batファイルの名前がbar.batだった場合のvbsファイルの中身
 ```
@@ -46,7 +45,7 @@ objWShell.Run "cmd /c start.bat", vbMinimizedNoFocus, False
 Set objWShell = Nothing
 ```
 
-8, 完成！起動はvbsファイルもしくはbatファイルをクリック。
-これでrostacleフォルダごと環境を持ち運べる。
+#### 8, 完成！起動はvbsファイルもしくはbatファイルをクリック。
+#### これでrostacleフォルダごと環境を持ち運べる。
 
-以上
+#### 以上
