@@ -47,5 +47,7 @@ Set objWShell = Nothing
 
 #### 8, 完成！起動はvbsファイルもしくはbatファイルをクリック。
 #### これでrostacleフォルダごと環境を持ち運べる。
+#### ※こちらの一式はwindows 64bit用です。32bitの場合は本家[roswell](https://github.com/roswell/roswell/wiki/Installation#windows)より本体をダウンロード、展開して使ってください。
+
 
 #### 以上
