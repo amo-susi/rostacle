@@ -1,7 +1,7 @@
 # rostacle
 
 ## Usage
-roswell + portacle.
+roswell + portacle(portableなroswell環境 on windows).
 
 #### 1, 適当な場所に置く。
 #### 2, `ros-build.bat`をクリック。
