@@ -1,7 +1,7 @@
 # rostacle
 
 ## Usage
-roswell + portacle.
+roswell + portacle(portableなroswell環境 on windows).
 
 #### 1, 適当な場所に置く。
 #### 2, `ros-build.bat`をクリック。
@@ -40,12 +40,14 @@ Const vbMinimizedNoFocus = 6 '最小化、ただし、最前面にはならな�
  
 Dim objWShell
 Set objWShell = CreateObject("WScript.Shell")
-objWShell.Run "cmd /c bar.bat", vbMinimizedNoFocus, False
+objWShell.Run "cmd /c bar.bat", vbHide, False
  
 Set objWShell = Nothing
 ```
 
 #### 8, 完成！起動はvbsファイルもしくはbatファイルをクリック。
 #### これでrostacleフォルダごと環境を持ち運べる。
+#### ※こちらの一式はwindows 64bit用です。32bitの場合は本家[roswell](https://github.com/roswell/roswell/wiki/Installation#windows)より本体をダウンロード、展開して使ってください。
+
 
 #### 以上
