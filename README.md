@@ -4,7 +4,7 @@
 roswell + portacle(portableなroswell環境 on windows).
 
 #### 1, 適当な場所に置く。
-#### 2, `ros-build.bat`をクリック。
+#### 2, `ros-setup.bat`をクリック。
 #### 3, `ros-install.bat xxx`で使いたいライブラリをインストールもしくは、roswell/.roswell/lisp/quicklisp/local-projects以下に配置。
 #### 4, rosファイルを作成。
 #### 5, rosファイルを起動させるbatを作成。
