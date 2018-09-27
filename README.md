@@ -13,13 +13,6 @@ roswell/ に.roswellディレクトリが生成される。
 rosファイル名がfoo.rosだった場合のbatファイルの中身
 ```
 @echo off
- 
-if not "%~0"=="%~dp0.\%~nx0" (
-     start /min cmd /c,"%~dp0.\%~nx0" %*
-     exit
-)
-
-
 cd %~dp0
 set ROSWELL_HOME=%~dp0\roswell\.roswell
 %~dp0\roswell\ros.exe foo.ros
