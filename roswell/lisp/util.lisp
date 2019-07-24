@@ -30,6 +30,7 @@
            (when f (funcall f name value 1)))
   #+ecl(ext:setenv name value)
   #+lispworks (hcl:setenv name name value)
+  #+mkcl(mkcl:setenv name value)
   value)
 
 (defun unsetenv (name)
@@ -40,6 +41,7 @@
   #+cmucl(let ((f (ignore-errors (symbol-function (read-from-string "unix:unix-unsetenv")))))
            (when f (funcall f name)))
   #+lispworks(hcl:setenv name nil)
+  #+mkcl(mkcl:setenv name nil)
   nil)
 
 (defun read-call (func &rest params)
@@ -217,30 +219,46 @@ ccl-bin      -> (\"ccl-bin\" nil)
 
 (defun clone-github (owner name &key
                                 (alias (format nil "~A/~A" owner name))
-                                branch force-git
+                                branch force-git (git t)
+                                force-update
                                 (path "templates")
                                 (home (checkoutdir)))
-  (format *error-output* "Installing from github ~A/~A~%" owner name)
-  (if (or force-git (which "git"))
+  (format *error-output* "Installing from github ~A~%" alias)
+  (if (or force-git
+          (and git
+               (which "git")))
       (let ((dir (merge-pathnames (format nil "~A/~A/" path alias) home)))
         (setq branch (if branch (format nil "-b ~A" branch) ""))
         (if (funcall (intern (string :probe-file*) :uiop) dir)
             ()
             (funcall (intern (string :run-program) :uiop)
-                     (format nil "git clone ~A https://github.com/~A/~A.git ~A"
+                     (format nil "git clone ~A https://github.com/~A.git ~A"
                              branch
-                             owner name
+                             alias
                              (namestring (ensure-directories-exist dir))))))
       (let* ((path/ (merge-pathnames (format nil "~A/~A.tgz" path alias) home))
-             (dir (merge-pathnames ".expand/" (make-pathname :defaults path/ :name nil :type nil))))
-        (funcall (intern (string :delete-directory-tree) :uiop) dir :if-does-not-exist :ignore :validate t)
+             (dir (merge-pathnames ".expand/" (make-pathname :defaults path/ :name nil :type nil)))
+             (dest (merge-pathnames (format nil "~A/~A/" path alias) home))
+             (dtree (intern (string :delete-directory-tree) :uiop))
+             clean-dest)
+        (when (probe-file dest)
+          (format *error-output* "~S is already exist.~%" dest)
+          (cond
+            (force-update
+             (format *error-output* "Delete ~S and force update.~%" dest)
+             (setf clean-dest t))
+            (t
+             (format *error-output* "Stop cloning because no git client.~%")
+             (return-from clone-github t))))
+        (funcall dtree dir :if-does-not-exist :ignore :validate t)
         (setq branch (or branch "master"))
         (download (format nil "https://github.com/~A/archive/~A.tar.gz" alias branch) path/)
         (expand path/ (ensure-directories-exist dir))
-        (rename-file (first (directory (merge-pathnames "*/" dir)))
-                     (merge-pathnames (format nil "~A/~A/" path alias) home))
+        (when clean-dest
+          (funcall dtree dest :validate t))
+        (rename-file (first (directory (merge-pathnames "*/" dir))) dest)
         (delete-file path/)
-        (funcall (intern (string :delete-directory-tree) :uiop) dir :if-does-not-exist :ignore :validate t)
+        (funcall dtree dir :if-does-not-exist :ignore :validate t)
         t)))
 
 (defun config-env ()

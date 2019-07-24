@@ -62,6 +62,7 @@
                 do (download (second list) archive-file)))
       (uiop/filesystem:delete-directory-tree (ensure-directories-exist extract-path) :validate t)
       (expand archive-file (ensure-directories-exist extract-path))
+      (uiop/filesystem:delete-directory-tree (merge-pathnames (format nil "lisp/slime/~A/" name) (homedir)) :validate t :if-does-not-exist :ignore)
       (prog1
           (ql-impl-util:rename-directory
            (first (directory (make-pathname :defaults extract-path :name :wild :type :wild)))
@@ -82,7 +83,10 @@
     (format *error-output* "~{~A~%~}"
             `(,(format nil "helper.el installed in ~S" (namestring target)) ""
               "To use, add this to your ~/.emacs:" ""
-              ,(format nil "  (load (expand-file-name ~S))" enough)))))
+              ,(format nil
+                       "  (load (expand-file-name ~S))"
+                       #-win32 enough
+                       #+win32 (namestring target))))))
 
 (defun slime-install (argv)
   (let ((name (or (getf argv :version) (substitute #\. #\- (ql:dist-version "quicklisp")))))

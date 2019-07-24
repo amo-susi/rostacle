@@ -27,11 +27,12 @@ have the latest asdf, and this file has a workaround for this.
   (:nicknames :ros)
   (:shadow :load :eval :package :restart :print :write)
   (:export :run :*argv* :*main* :*load* :*cmd* :quit :script :quicklisp :getenv :opt
-           :ignore-shebang :asdf :include :ensure-asdf
-           :roswell :exec :setenv :unsetenv :version :swank :verbose)
+           :ignore-shebang :asdf :include :ensure-asdf :revert-extension
+           :roswell :exec :setenv :unsetenv :version :swank :verbose :*init-hook*)
   (:documentation "Roswell backend."))
 
 (in-package :roswell)
+(defvar *init-hook* nil)
 (defparameter *argv* nil)
 (defparameter *ros-opts* nil)
 (defparameter *main* nil)
@@ -68,8 +69,11 @@ have the latest asdf, and this file has a workaround for this.
                (or (read-from-string (getenv "ROS_OPTS"))
                    '()))))))
 
-(defun opt (param)
-  (second (assoc param (ros-opts) :test 'equal)))
+(defun opt (param &key from-end)
+  (second (assoc param
+                 (funcall (if from-end #'reverse #'identity)
+                          (ros-opts))
+                 :test 'equal)))
 
 (defun verbose ()
   (and (opt "verbose")
@@ -169,27 +173,28 @@ have the latest asdf, and this file has a workaround for this.
                                (and environment (getenv environment))
                                (opt "quicklisp"))))
           (local (ignore-errors
-                   (truename
-                    (merge-pathnames
-                     ".roswell/local-projects/"
-                     *default-pathname-defaults*)))))
+                  (truename
+                   (merge-pathnames
+                    ".roswell/local-projects/"
+                    *default-pathname-defaults*)))))
       (when (probe-file path)
         (cl:load path :verbose (verbose))
-        (loop with symbol = (read-from-string "ql:*local-project-directories*")
-           ;; ql:*local-project-directories* defaults to a list of a single pathname,
-           ;; which is <directory containing setup.lisp>/local-projects/ .
-           for path in `(;; Searches local-project/ in the current directory
-                         ,local
-                         ;; This is WHAAAAAT????
-                         ,(ignore-errors
-                            (truename (merge-pathnames "../../../local-projects/" (first (symbol-value symbol)))))
-                         ;; Searches local-project/ in e.g. ~/.roswell/
-                         ,(merge-pathnames "local-projects/" (opt "homedir")))
-           for probe = (and path (or (ignore-errors (probe-file path))
-                                     #+clisp(ext:probe-directory path)))
-           when probe
-           do (set symbol (cons path (symbol-value symbol)))
-           until probe)
+        (unless (getenv environment)
+          (loop with symbol = (read-from-string "ql:*local-project-directories*")
+                ;; ql:*local-project-directories* defaults to a list of a single pathname,
+                ;; which is <directory containing setup.lisp>/local-projects/ .
+                for path in `(;; Searches local-project/ in the current directory
+                              ,local
+                              ;; This is WHAAAAAT????
+                              ,(ignore-errors
+                                (truename (merge-pathnames "../../../local-projects/" (first (symbol-value symbol)))))
+                              ;; Searches local-project/ in e.g. ~/.roswell/
+                              ,(ensure-directories-exist (merge-pathnames "local-projects/" (opt "homedir"))))
+                for probe = (and path (or (ignore-errors (probe-file path))
+                                          #+clisp(ext:probe-directory path)))
+                when probe
+                do (set symbol (cons path (symbol-value symbol)))
+                until probe))
         t))))
 
 (defvar *included-names* '("init"))
@@ -412,7 +417,9 @@ As a hacky side effect, files with the same name as PROVIDE is not loaded.
   "The true internal entry invoked by the C binary. All roswell commands are dispatched from this function"
   (loop for elt in list
         for *cmd* = (first elt)
-        do (apply (intern (string (first elt)) (find-package :ros)) (rest elt))))
+        do (apply (intern (string (first elt)) (find-package :ros)) (rest elt)))
+  (loop for f in (reverse *init-hook*)
+        do (ignore-errors (funcall f))))
 
 (when (opt "roswellenv")
   (pushnew :roswellenv *features*)
