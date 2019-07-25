@@ -1,0 +1,26 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  #+quicklisp(ql:quickload '(:zip) :silent t)
+  )
+
+(defpackage :ros.script.test.3773020714
+  (:use :cl
+	:roswell.util))
+(in-package :ros.script.test.3773020714)
+
+(defvar *emacs* "emacs-26.2-i686.zip")
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (roswell.util:download (concatenate 'string
+				      "http://ftp.gnu.org/gnu/emacs/windows/emacs-26/emacs-26.2-i686.zip")
+			 "emacs.zip")
+  (zip:unzip "emacs.zip" "emacs\\")
+  (if (uiop:probe-file* "emacs.zip") (delete-file "emacs.zip")))
+
+;;; vim: set ft=lisp lisp:
