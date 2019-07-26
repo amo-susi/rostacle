@@ -6,7 +6,7 @@ roswell + portacle(portableなroswell環境 on windows).
 #### 1, 適当な場所に置く。
 #### 2, `ros-setup.bat`をクリック。
 roswell/ に.roswellディレクトリが生成される。
-#### 3, `ros-install.bat xxx`で使いたいライブラリxxxをインストールもしくは、使いたいライブラリをroswell/.roswell/lisp/quicklisp/local-projects以下に配置。
+#### 3, `ros-install.bat xxx`で使いたいライブラリxxxをインストールもしくは、使いたいライブラリをroswell/.roswell/lisp/quicklisp/local-projects以下に配置。(emacsもインストール場合はros-install-with-emacs.bat、emacsを立ち上げる場合はros-emacs.batを利用)
 #### 4, rosスクリプトファイルを作成。
 #### 5, rosスクリプトファイルを起動させるbatを作成。
 
